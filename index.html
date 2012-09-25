@@ -1,0 +1,183 @@
+<!doctype html>
+<html lan="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Website Status Dashboard</title>
+
+        <style>
+
+            @import url('normalize.css');
+
+            body {
+                background  : #f7f7f7;
+                color       : #000;
+                font-family : sans-serif;
+                font-size   : 16px;
+                padding     : 1em 2em;
+            }
+
+            #header, #main, #footer {
+                padding:1em 0;
+            }
+
+            #toolbar {
+                margin:1em 0;
+            }
+
+            #toolbar span {
+                padding       : 0.5em;
+                border-radius : 3px;
+                display       : block;
+                float         : left;
+                margin        : 0 1em 1em 0;
+            }
+
+            #refreshSettings {
+                background : #72b3cc;
+            }
+
+            #refreshLink {
+                background : #72b3cc;
+                cursor     : pointer;
+            }
+
+            #timestamp {
+                background : #b0b0b0;
+            }
+
+            #widgets {
+                clear      : both;
+                border-top : 1px solid #b0b0b0;
+                padding    : 1em 0;
+            }
+
+            .widget {
+                float         : left;
+                margin        : 0 1em 1em 0;
+                padding       : 1em;
+                border-radius : 3px;
+            }
+
+            #footer {
+                border-top : 1px solid #b0b0b0;
+                padding    : 1em 0;
+                clear      : both;
+            }
+            
+            h1, h2, h3, h4, h5, h6 {
+                font-weight:normal;
+                margin:0;
+            }
+
+            p {
+                margin:0;
+            }
+
+            /*
+            The following css classes should match (case-sensitively) the return words you've set up in get_status.php.
+            */
+
+            .Up {
+                background:#8eb33b;
+            }
+
+            .Down {
+                background:#c75646;
+            }
+
+            .Unreachable {
+                background:#c75646;
+            }
+
+            .Timeout {
+                background:#d0b03c;
+            }
+
+            .Problem {
+                background:#c75646;
+            }
+
+            .Redirecting {
+                background:#72b3cc;
+            }
+
+            .Teapot {
+                background:#72b3cc;')
+            }
+
+        </style>
+    </head>
+    <body>
+        <header id="header">
+        <h1>Website Status Dashboard</h1>
+        <div id="toolbar">
+            <span id="refreshLink">Refresh Now</span>
+            <span id="refreshSettings">
+                <label for="autoRefresh">Refresh every five minutes?</label>
+                <input type="checkbox" name="autoRefresh" id="autoRefresh">
+            </span>
+            <span id="timestamp"></span>
+        </div>
+        </header>
+        <div id="main">
+            <div id="widgets"></div>
+        </div>
+        <footer id="footer">
+        <p>Written by <a rel="author" href="http://evanmsanders.com">Evan M. Sanders</a>.</p>
+        </footer>
+        <script src="jquery.min.js"></script>
+        <script src="jquery-ui.custom.min.js"></script>
+        <script>
+            $(document).ready(function() {
+
+                /**
+                * An array of urls to check.
+                * Define each one WITHOUT the 'http://' e.g 'example.com'
+                */
+                var websites = Array();
+
+                /**
+                * Refreshes site status widgets.
+                */
+                function refresh() {
+
+                    var timestamp = new Date();
+
+                    // Clear site widgets.
+                    $('#widgets').empty();
+
+                    // Clear the refreshed timestamp
+                    $('#timestamp').empty();
+
+                    // Get HTTP status code for each site and create widgets.
+                    for(site in websites) {
+                        $.getJSON('get_status.php?url=' + websites[site], function(data) {
+                            // Create the site widgets with classes depending on return codes.
+                            $('<div class="widget ' + data.status + '"><h2>' + data.url + '</h2><p>' + data.status + ' (returning ' + data.code + ')</p></div>').appendTo('#widgets'); 
+                        });
+                    }
+
+                    // Update the refreshed timestamp.
+                    $('#timestamp').append('Last refreshed: ' + timestamp.toLocaleTimeString());
+                    $('#timestamp').effect('highlight', { color:'#ffe377' }, 3000);
+
+                }
+
+                // Bind the refresh link to the function
+                $('#refreshLink').click(function() {
+                    refresh();
+                });
+
+                // Call refresh() on page load.
+                refresh(); 
+
+                // Call refresh every five minutes if the auto refresh checkbox is checked.
+                setInterval(function() {
+                    if($('#autoRefresh').is(':checked')) {
+                        refresh();
+                    }
+                }, 300000);
+            });
+        </script>
+    </body>
+</html>
